@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text ⇄ Base64 Converter</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="logo.png">
+</head>
+<body>
+  <div class="container">
+    <img src="logo.png" alt="Logo" class="logo">
+    <h1>Text ⇄ Base64 Converter</h1>
+    <p class="subtitle">Type in either box, then press Convert</p>
+
+    <div class="converter-box">
+      <label for="text">Text</label>
+      <textarea id="text" placeholder="Enter your text here..."></textarea>
+      <button class="copy-btn" data-target="text">Copy Text</button>
+    </div>
+
+    <!-- Centered Convert Button -->
+    <div class="convert-wrapper">
+      <button id="convertBtn" class="convert-btn">⇄ Convert ⇄</button>
+    </div>
+
+    <div class="converter-box">
+      <label for="base64">Base64</label>
+      <textarea id="base64" placeholder="Enter your Base64 here..."></textarea>
+      <button class="copy-btn" data-target="base64">Copy Base64</button>
+    </div>
+  </div>
+
+  <script>
+    const textBox = document.getElementById("text");
+    const base64Box = document.getElementById("base64");
+    const convertBtn = document.getElementById("convertBtn");
+
+    let lastEdited = null;
+
+    // Track which box was edited last
+    textBox.addEventListener("input", () => lastEdited = "text");
+    base64Box.addEventListener("input", () => lastEdited = "base64");
+
+    convertBtn.addEventListener("click", () => {
+      if (!lastEdited) {
+        alert("Please type in one of the boxes first!");
+        return;
+      }
+
+      if (lastEdited === "text") {
+        const text = textBox.value.trim();
+        if (text === "") return alert("Please enter text first!");
+        fetch("convert.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "text=" + encodeURIComponent(text)
+        })
+        .then(res => res.text())
+        .then(data => base64Box.value = data);
+      } else if (lastEdited === "base64") {
+        const base64 = base64Box.value.trim();
+        if (base64 === "") return alert("Please enter Base64 first!");
+        fetch("convert.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "base64=" + encodeURIComponent(base64)
+        })
+        .then(res => res.text())
+        .then(data => textBox.value = data);
+      }
+    });
+
+    // Copy buttons
+    document.querySelectorAll(".copy-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        const target = document.getElementById(button.dataset.target);
+        target.select();
+        document.execCommand("copy");
+        button.textContent = "Copied!";
+        setTimeout(() => {
+          button.textContent = "Copy " + (button.dataset.target === "text" ? "Text" : "Base64");
+        }, 1500);
+      });
+    });
+  </script>
+</body>
+</html>
